@@ -12,12 +12,12 @@ func ParseString(input string, Q mapset.Set, sigma map[string]map[byte]string, q
 			fmt.Print(qState + "-" + string(char) + "->" + sigma[qState][byte(char)])
 			qState = sigma[qState][byte(char)];
 		} else {
-			fmt.Print("Ошибка в при разборе строки в позиции " + string(pos) + ";")
+			fmt.Printf(" -  Ошибка в при разборе строки в позиции %v;", pos)
 			return;
 		}
 	}
 
 	if !F.Contains(qState) {
-		fmt.Print("Ошибка в при разборе строки в позиции " + string(len(input)) + "; Разбор закончился на не конечном состоянии;")
+		fmt.Print(" -  Разбор закончился на не конечном состоянии;")
 	}
 }

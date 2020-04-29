@@ -7,6 +7,7 @@ import (
 	"container/list"
 	"strconv"
 	"strings"
+	"github.com/deckarep/golang-set"
 )
 func ComputeMetricsPos(node *tree.Tree)(map[int]*list.List) {
 	pos := 0
@@ -162,14 +163,15 @@ func SinQ(s *State, Q *list.List) bool {
 	return false
 }
 
-func GetDfa(input string, root *tree.Tree, flowpos map[int]*list.List) (State, State, map[string]map[byte]string, list.List) {
+func GetDfa(input string, root *tree.Tree, flowpos map[int]*list.List) (State, mapset.Set, map[string]map[byte]string, list.List) {
 	states := list.New()
 	q0 := State{Content: &root.FirstPos, Marked: false}
-	endState := q0
+	endState := mapset.NewSet();
 	states.PushBack(&q0)
 	rulles := make(map[string]map[byte]string)
 	for R := getUnmarkedState(states); R != nil; R = getUnmarkedState(states) {
 		R.Marked = true;
+		isEndState := false;
 		for key, value := range get_all_uniq_sym_n_poses(input, R) {
 			newStatePoses := list.New()
 			for temp := value.Front(); temp != nil; temp = temp.Next() {
@@ -182,6 +184,16 @@ func GetDfa(input string, root *tree.Tree, flowpos map[int]*list.List) (State, S
 									if(val == pose ) {isExist = true}
 								}
 							}
+							if flowpos[val] == nil {isEndState = true}
+							if !isEndState && flowpos[val].Len() == 1 {
+								for temp := flowpos[val].Front(); temp != nil; temp = temp.Next() {
+									if pose, ok := temp.Value.(int); ok { 
+										if val == pose {
+											isEndState = true
+										}
+									}
+								}
+							}
 							if !isExist {newStatePoses.PushBack(val)}
 						}
 					}
@@ -191,7 +203,9 @@ func GetDfa(input string, root *tree.Tree, flowpos map[int]*list.List) (State, S
 				newState := State{Content: newStatePoses, Marked: false}
 				if !SinQ(&newState, states) {
 					states.PushBack(&newState)
-					endState = newState
+					if isEndState {
+						endState.Add(newState.ToString())
+					}
 				}
 				if(rulles[R.ToString()] == nil) {rulles[R.ToString()] = make(map[byte]string)}
 				rulles[R.ToString()][key]=newState.ToString();
